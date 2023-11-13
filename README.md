@@ -5,9 +5,9 @@ Code and data for simulation project on MEEG onset estimation
 ## R code 
 | Notebook | Content | Figures |
 | ----- | ----- | ----- |
-|`examples.Rmd`| Illustrate noise, signal and statistical methods.| Figures 1 & 2 |
-|`onsetsim_eeg.Rmd`| Simulate one participant using EEG-like noise with the approach from Yeung et al. (2004).| Figure 3 & 4 |
-|`onsetsim_eeg_group.Rmd`| Simulate 20 participants with random onsets.| Figure 5 |
+|`examples.Rmd`| Illustrate noise, signal and statistical methods.| Fig 1 & 2 |
+|`onsetsim_eeg.Rmd`| Simulate one participant using EEG-like noise with the approach from Yeung et al. (2004).| Fig 3 & 4 |
+|`onsetsim_eeg_group.Rmd`| Simulate 20 participants with random onsets.| Fig 5 |
 |`onsetsim_1overf.Rmd`| Simulate one participant with 1/f noise.| NA |
 
 ## Matlab code

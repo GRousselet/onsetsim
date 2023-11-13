@@ -142,7 +142,7 @@ categ.palette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072
 
 df <- tibble(onsets = c(simres.cp, simres.cs, simres.fdr, simres.max),
              method = factor(c(rep("change point", length(simres.cp)),
-                               rep("cluster sum", length(simres.cs)),
+                               rep("cluster-sum", length(simres.cs)),
                                rep("FDR", length(simres.fdr)),
                                rep("MAX", length(simres.max))))
 )

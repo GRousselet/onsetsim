@@ -1,6 +1,7 @@
 # Using cluster-based permutation tests to estimate MEG/EEG onsets: how bad is it?
 
-Code and data for simulation project on MEEG onset estimation
+Code and data for simulation project on MEEG onset estimation.
+[[Preprint]](https://www.biorxiv.org/content/10.1101/2023.11.13.566864v1)
 
 ## R code 
 | Notebook | Content | Figures |

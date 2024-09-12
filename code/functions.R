@@ -24,6 +24,28 @@ permtdist <- function(cond1, cond2, Nt, Nf, nboot = 2000){
   perm.tvals
 }
 
+# Generate permutation distributions of t values for one group
+## diff is a matrix of pairwise differences Np participants x Nf time frames matrices
+permtdist.onesamp <- function(diff, Np, Nf, nboot = 2000){
+  
+  perm.tvals <- matrix(data = 0, nrow = nboot, ncol = Nf)
+  permdiff <- diff
+  
+  for(B in 1:nboot){
+    
+    for(P in 1:Np){
+      newsign <- sample(c(-1,1),1) # flip a coin
+      permdiff[P,] <- diff[P,] * newsign 
+    }
+
+    for(F in 1:Nf){ # for each time frame:
+      perm.tvals[B,F] <- t.test(permdiff[,F])$statistic
+    }
+    
+  }
+  perm.tvals
+}
+
 # Cluster correction
 
 ## Form clusters using binary vector: pvals < alpha
@@ -70,8 +92,6 @@ cluster.test <- function(values, cmap, boot.th){
     for(CL in 1:max(cmap)){
       csig[cmap==CL] <- sum(values[cmap==CL]) > boot.th
     }
-  } else {
-    csig <- FALSE
   }
   csig
 }
@@ -112,10 +132,70 @@ find_onset <- function(sigmask, Xf, rmzero = TRUE){
 }
 
 # https://www.statology.org/mode-in-r/
-find_mode <- function(x) {
+find_mode <- function(x, na.rm = TRUE) {
+  if(na.rm){
+    x <- na.omit(x)
+  }
   u <- unique(x)
   tab <- tabulate(match(x, u))
   u[tab == max(tab)]
+}
+
+keeporder <- function(x){
+  x <- as.character(x)
+  x <- factor(x, levels=unique(x))
+  x
+}
+
+# code from Rand Wilcox https://osf.io/xhe8u/
+hd<-function(x,q=.5,na.rm=TRUE){
+  #
+  #  Compute the Harrell-Davis estimate of the qth quantile
+  #
+  #  The vector x contains the data,
+  #  and the desired quantile is q
+  #  The default value for q is .5.
+  #
+  if(na.rm)x=elimna(x)
+  n<-length(x)
+  m1<-(n+1)*q
+  m2<-(n+1)*(1-q)
+  vec<-seq(along=x)
+  w<-pbeta(vec/n,m1,m2)-pbeta((vec-1)/n,m1,m2)  # W sub i values
+  y<-sort(x)
+  hd<-sum(w*y)
+  hd
+}
+
+elimna<-function(m){
+  #
+  # remove any rows of data having missing values
+  #
+  DONE=FALSE
+  if(is.list(m) && is.matrix(m)){
+    z=pool.a.list(m)
+    m=matrix(z,ncol=ncol(m))
+    DONE=TRUE
+  }
+  if(!DONE){
+    if(is.list(m) && is.matrix(m[[1]])){
+      for(j in 1:length(m))m[[j]]=na.omit(m[[j]])
+      e=m
+      DONE=TRUE
+    }}
+  if(!DONE){
+    if(is.list(m) && is.null(dim(m))){ #!is.matrix(m))
+      for(j in 1:length(m))m[[j]]=as.vector(na.omit(m[[j]]))
+      e=m
+      DONE=TRUE
+    }}
+  if(!DONE){
+    m<-as.matrix(m)
+    ikeep<-c(1:nrow(m))
+    for(i in 1:nrow(m))if(sum(is.na(m[i,])>=1))ikeep[i]<-0
+    e<-m[ikeep[ikeep>=1],]
+  }
+  e
 }
 
 

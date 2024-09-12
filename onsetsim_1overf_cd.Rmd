@@ -1,0 +1,200 @@
+---
+title: "Estimating onsets using cluster-depth statistics: simulation"
+author: "Guillaume A. Rousselet"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    fig_caption: no
+    number_sections: no
+    toc: yes
+    toc_depth: 2
+    # github_document:
+    # html_preview: yes
+    # toc: yes
+    # toc_depth: 2
+---
+
+Same as `onsetsim_1overf.Rmd`, but here I only use the cluster-depth algorithm ([Frossard & Renaud, 2022](https://www.sciencedirect.com/science/article/pii/S1053811921010958)) from the [`permuco` package](https://jaromilfrossard.github.io/permuco/).
+
+# Dependencies
+```{r, message=FALSE}
+library(ggplot2)
+library(tibble)
+library(changepoint)
+library(cowplot)
+library(beepr)
+library(Rfast)
+source("./code/functions.R")
+source("./code/theme_gar.txt")
+# Edit `one_over_f` function from `primer` package to control variance (Stevens, 2009). 
+# Original function is available on [GitHub](https://github.com/HankStevens/primer).
+# Copyright Hank Stevens.
+source("./code/one_over_f.R")
+# Load template: true onset = 160 ms, F=81, max at F=126
+source("./code/erp_template.R")
+library(permuco) # to compute cluster depth statistics
+```
+
+# Simulation: one gamma value
+
+```{r, eval=FALSE, warning=FALSE}
+set.seed(666)
+aath <- 0.05 # arbitrary alpha threshold
+nsim <- 10000 # simulation iterations
+nboot <- 2000 # number of permutation samples
+inc.step <- 500 # console notification every inc.step iterations
+
+simres.cd <- vector(mode = "numeric", length = nsim) * NA
+
+Nt <- 50 # number of trials
+gsp <- 1 # gamma spectral power
+outvar <- 1 # noise variance
+cond1 <- matrix(0, nrow = Nt, ncol = Nf)
+cond2 <- matrix(0, nrow = Nt, ncol = Nf)
+
+for(S in 1:nsim){
+  
+  sim.counter(S, nsim, inc = inc.step)
+  
+  for(T in 1:Nt){
+    cond2[T,] <- temp2 + one_over_f(gamma = gsp, Nf, outvar = outvar)
+    cond1[T,] <- temp1 + one_over_f(gamma = gsp, Nf, outvar = outvar)  
+  }
+  
+  # cluster-depth statistics
+  df <- as_tibble(rbind(cond1, cond2))
+  df2 <- tibble(gp = rep(c("gp1", "gp2"), each = Nt),
+                trial = c(1:Nt, 1:Nt))
+  df <- cbind(df2, df)
+  
+  res <- permuco::clusterlm(formula = df[,3:ncol(df)] ~ gp, 
+                            data = df[,-(3:ncol(df))],
+                            multcomp = "clusterdepth_head",
+                            test = "t",
+                            np = nboot)
+  
+  cd.pval <- res$multiple_comparison$gpgp2$clusterdepth$main[,2]
+  # cd.tval <- res$multiple_comparison$gpgp2$clusterdepth$main[,1]
+  simres.cd[S] <- find_onset(cd.pval < aath, Xf)
+}
+
+save(simres.cd, file = "./data/onsetsim_n50_gamma1_cd.RData")
+```
+
+# Simulation: vary gamma
+
+Here we vary gamma from zero to two in steps of 0.2
+
+```{r, eval=FALSE, warning=FALSE}
+
+aath <- 0.05 # arbitrary alpha threshold
+nsim <- 10000 # simulation iterations
+nboot <- 2000 # number of permutation samples
+inc.step <- 1 # console notification every inc.step iterations
+gamma_vec <- seq(0,2,0.2) # gamma from 0 = white noise to 1 = pink noise
+gamma_length <- length(gamma_vec)
+
+simres.cd <- matrix(NA, nrow = gamma_length, ncol = nsim)
+
+Nt <- 50 # number of trials
+outvar <- 1 # noise variance
+cond1 <- matrix(0, nrow = Nt, ncol = Nf)
+cond2 <- matrix(0, nrow = Nt, ncol = Nf)
+
+for(G in 1:gamma_length){
+  
+  set.seed(666) # set seed here so results are directly comparable across gamma values    
+  gsp <- gamma_vec[G] # gamma spectral power
+  sim.counter(G, gamma_length, inc = inc.step)
+  
+  for(S in 1:nsim){
+    
+    for(T in 1:Nt){
+      cond2[T,] <- temp2 + one_over_f(gamma = gsp, Nf, outvar = outvar)
+      cond1[T,] <- temp1 + one_over_f(gamma = gsp, Nf, outvar = outvar)  
+    }
+    
+    # cluster-depth statistics
+    df <- as_tibble(rbind(cond1, cond2))
+    df2 <- tibble(gp = rep(c("gp1", "gp2"), each = Nt),
+                  trial = c(1:Nt, 1:Nt))
+    df <- cbind(df2, df)
+    
+    res <- permuco::clusterlm(formula = df[,3:ncol(df)] ~ gp, 
+                              data = df[,-(3:ncol(df))],
+                              multcomp = "clusterdepth_head",
+                              test = "t",
+                              np = nboot)
+    
+    cd.pval <- res$multiple_comparison$gpgp2$clusterdepth$main[,2]
+    # cd.tval <- res$multiple_comparison$gpgp2$clusterdepth$main[,1]
+    simres.cd[G,S] <- find_onset(cd.pval < aath, Xf)
+  }
+}
+
+save(simres.cd, file = "./data/onsetsim_t2_n50_var1_gammavar_cd.RData")
+```
+
+# Simulation: vary n
+
+Here we vary gamma from zero to two in steps of 0.2
+
+```{r, eval=FALSE, warning=FALSE}
+set.seed(666) 
+aath <- 0.05 # arbitrary alpha threshold
+nsim <- 10000 # simulation iterations
+nboot <- 2000 # number of permutation samples
+inc.step <- 500 # console notification every inc.step iterations
+n_vec <- seq(20,150,10) 
+n_length <- length(n_vec)
+n_max <- max(n_vec)
+gsp <- 1 # gamma spectral power -- 0 = white noise, 1 = pink noise
+
+simres.cd <- matrix(NA, nrow = n_length, ncol = nsim)
+
+Nt <- 50 # number of trials
+outvar <- 1 # noise variance
+cond1_all <- matrix(0, nrow = n_max, ncol = Nf)
+cond2_all <- matrix(0, nrow = n_max, ncol = Nf)
+
+for(S in 1:nsim){
+  
+  sim.counter(S, nsim, inc = inc.step)
+  
+  # Generate all trials
+  for(T in 1:n_max){
+    cond2_all[T,] <- temp2 + one_over_f(gamma = gsp, Nf, outvar = outvar)
+    cond1_all[T,] <- temp1 + one_over_f(gamma = gsp, Nf, outvar = outvar)
+  }
+  
+  for(N in 1:n_length){
+    
+    Nt <- n_vec[N]
+    
+    # downsample to current size
+    cond2 <- cond2_all[1:Nt,]
+    cond1 <- cond1_all[1:Nt,]
+    
+    # cluster-depth statistics
+    df <- as_tibble(rbind(cond1, cond2))
+    df2 <- tibble(gp = rep(c("gp1", "gp2"), each = Nt),
+                  trial = c(1:Nt, 1:Nt))
+    df <- cbind(df2, df)
+    
+    res <- permuco::clusterlm(formula = df[,3:ncol(df)] ~ gp, 
+                              data = df[,-(3:ncol(df))],
+                              multcomp = "clusterdepth_head",
+                              test = "t",
+                              np = nboot)
+    
+    cd.pval <- res$multiple_comparison$gpgp2$clusterdepth$main[,2]
+    # cd.tval <- res$multiple_comparison$gpgp2$clusterdepth$main[,1]
+    simres.cd[N,S] <- find_onset(cd.pval < aath, Xf)
+  }
+}
+
+save(simres.cd, file = "./data/onsetsim_t2_varyn_var1_gamma1_cd.RData")
+```
+
+
+

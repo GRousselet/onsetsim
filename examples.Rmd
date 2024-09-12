@@ -3,15 +3,15 @@ title: "Estimating onsets using cluster statistics: examples"
 author: "Guillaume A. Rousselet"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    fig_caption: no
-    number_sections: no
+  # pdf_document:
+  #   fig_caption: no
+  #   number_sections: no
+  #   toc: yes
+  #   toc_depth: 2
+    github_document:
+    html_preview: yes
     toc: yes
     toc_depth: 2
-    # github_document:
-    # html_preview: yes
-    # toc: yes
-    # toc_depth: 2
 ---
 
 # Dependencies
@@ -30,6 +30,7 @@ source("./code/theme_gar.txt")
 source("./code/one_over_f.R")
 # Load template: true onset = 160 ms, F=81, max at F=126
 source("./code/erp_template.R")
+source("./code/erp_template_half.R")
 # R version of Matlab code from Yeung et al. 2004
 source("./code/eeg_noise.R")
 # to use with eeg_noise function
@@ -53,7 +54,22 @@ p <- ggplot(df, aes(x, y)) + theme_gar +
   labs(x = "Time in ms", y = "Signal in arbitrary units")
 p
 p.template <- p
-ggsave(filename = "./figures/template.pdf", width = 10, height = 5) 
+# ggsave(filename = "./figures/template.pdf", width = 10, height = 5) 
+```
+
+## Half duration template
+
+Template used in `onsetsim_eeg_half.Rmd`.
+
+```{r}
+df <- tibble(x = Xf,
+             y = temp2.half)
+p <- ggplot(df, aes(x, y)) + theme_gar +
+  geom_line() + 
+  labs(x = "Time in ms", y = "Signal in arbitrary units")
+p
+p.template <- p
+# ggsave(filename = "./figures/template.pdf", width = 10, height = 5) 
 ```
 
 # Generate noise using `one_over_f` function
@@ -101,7 +117,7 @@ ggplot(df, aes(x, y, group = gamma)) + theme_gar +
   facet_wrap(vars(gamma)) +
   labs(x = "Time in ms", y = "Signal in arbitrary units")
 
-ggsave(filename = "./figures/gamma_noise.pdf", width = 10, height = 5)
+# ggsave(filename = "./figures/gamma_noise.pdf", width = 10, height = 5)
 ```
 
 ### Superimposed
@@ -123,7 +139,6 @@ ggplot(df, aes(x, y, group = gamma, colour = gamma)) + theme_gar +
   scale_colour_viridis_d(end = 0.95) +
   labs(x = "Time in ms", y = "Signal in arbitrary units")
 ```
-
 
 ## Illustrate signal + noise
 
@@ -154,7 +169,7 @@ ggplot(df, aes(x, y, group = trials)) + theme_gar +
   geom_line(data = df2, aes(x, y), linewidth = 2, colour = "black") + 
   labs(x = "Time in ms", y = "Signal in arbitrary units")
 
-ggsave(filename = "./figures/gamma_noise_trials_mean.pdf", width = 10, height = 5) 
+# ggsave(filename = "./figures/gamma_noise_trials_mean.pdf", width = 10, height = 5) 
 ```
 
 ## Illustrate averages
@@ -183,7 +198,7 @@ ggplot(df, aes(x, y, colour = conds)) + theme_gar +
   labs(x = "Time in ms", y = "Signal in arbitrary units") +
   scale_colour_manual(values = c("grey", "black"))
   
-ggsave(filename = "./figures/gamma_noise_mean.pdf", width = 10, height = 5)
+# ggsave(filename = "./figures/gamma_noise_mean.pdf", width = 10, height = 5)
 ```
 
 # Generate noise using `eeg_noise` function
@@ -211,10 +226,10 @@ ggplot(df, aes(x, y, group = trials, colour = trials)) + theme_gar +
   labs(x = "Time in ms", y = "Signal in arbitrary units") +
   scale_colour_viridis_d()
 
-ggsave(filename = "./figures/eeg_noise_trials.pdf", width = 10, height = 5)
+# ggsave(filename = "./figures/eeg_noise_trials.pdf", width = 10, height = 5)
 ```
 
-### Separate plots: 10 examples
+### Separate plots: 10 example trials
 
 ```{r}
 set.seed(666)
@@ -234,7 +249,8 @@ ggplot(df, aes(x, y, group = trials, colour = trials)) + theme_gar +
   labs(x = "Time in ms", y = "Signal in arbitrary units") +
   facet_wrap(vars(trials), nrow = 2)
 ```
-### Separate plots: 3 examples
+
+### Separate plots: 4 example trials
 
 ```{r}
 set.seed(666)
@@ -249,9 +265,9 @@ df <- tibble(x = rep(Xf, each = Nt),
              y = as.vector(resmat),
              trials = factor(rep(seq(1,Nt), Nf)))
 
-p <- ggplot(df, aes(x, y, group = trials, colour = trials)) + theme_gar + 
+p <- ggplot(df, aes(x, y, group = trials)) + theme_gar + 
   geom_hline(yintercept = 0) +
-  geom_line(show.legend = FALSE) +
+  geom_line(linewidth = 1, colour = "darkgrey", show.legend = FALSE) +
   labs(x = "Time in ms", y = "Signal in arbitrary units") +
   facet_wrap(vars(trials), nrow = 4) +
   theme(strip.background = element_blank(),
@@ -290,7 +306,7 @@ p <- ggplot(df, aes(x, y, group = trials)) + theme_gar +
   labs(x = "Time in ms", y = "Signal in arbitrary units")
 p
 p.signoise <- p
-ggsave(filename = "./figures/eeg_noise_trials_mean.pdf", width = 10, height = 5) 
+# ggsave(filename = "./figures/eeg_noise_trials_mean.pdf", width = 10, height = 5) 
 ```
 
 ## Illustrate averages
@@ -309,10 +325,32 @@ p <-ggplot(df, aes(x, y, colour = conds)) + theme_gar +
   scale_colour_manual(values = c("grey", "black"))
 p
 p.averages <- p  
-ggsave(filename = "./figures/eeg_noise_mean.pdf", width = 10, height = 5)
+# ggsave(filename = "./figures/eeg_noise_mean.pdf", width = 10, height = 5)
 ```
 
+### Check centred data
 
+To be used with cluster-depth. Centering data is required to insure asymptotic stationarity of the permuted residuals (Frossard & Renaud, 2022). 
+
+```{r}
+cond1.c <- cond1 - matrix(rep(apply(cond1, 2, mean),each=Nt),nrow=Nt)
+cond2.c <- cond2 - matrix(rep(apply(cond2, 2, mean),each=Nt),nrow=Nt)
+
+df <- tibble(x = rep(Xf,2),
+             y = c(apply(cond1.c, 2, mean), 
+                   apply(cond2.c, 2, mean)),
+             conds = factor(rep(c("Condition 1", "Condition 2"), each = Nf)))
+
+p <-ggplot(df, aes(x, y, colour = conds)) + theme_gar +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 2, show.legend = FALSE) +
+  geom_vline(xintercept = true_onset) +
+  labs(x = "Time in ms", y = "Signal in arbitrary units") +
+  scale_colour_manual(values = c("grey", "black"))
+  # coord_cartesian(ylim = c(-0.1, 1))
+p
+```
+                        
 # T^2 time courses
 
 ```{r}
@@ -330,12 +368,12 @@ p <- ggplot(df, aes(x, y)) + theme_gar +
     labs(x = "Time in ms", y = bquote(t^2))
 p
 p.t2 <- p
-ggsave(filename = "./figures/eeg_t2.pdf", width = 10, height = 5)
+# ggsave(filename = "./figures/eeg_t2.pdf", width = 10, height = 5)
 ```
 
 # Summary figure: signal and noise
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, warning=FALSE}
 p.BCDE <- plot_grid(p.template, p.signoise, p.averages, p.t2,
                     labels = c("B", "C", "D", "E"),
                     label_size = 20)
@@ -346,7 +384,7 @@ plot_grid(p.noise, p.BCDE,
           label_size = 20
           )
 
-ggsave(filename = "./figures/figure1.pdf", width = 20, height = 10)
+ggsave(filename = "./figures/examples_1.pdf", width = 20, height = 10)
 ```
 
 # Estimate onsets: examples
@@ -369,13 +407,20 @@ p.cp
 
 ## Permutation
 
-### Generate distribution
+### Generate distributions
 ```{r}
-nboot <- 500
+nboot <- 2000
 aath <- 0.05 # arbitrary alpha threshold
+
 # Make permutation table of t values 
 perm.tvals <- permtdist(cond1, cond2, Nt, Nf, nboot = nboot)
 perm.t2 <- perm.tvals^2
+
+# Make permutation table of t values for cluster-depth method
+# Each condition is centred first, following Frossard & Renaud (2022)
+perm.tvals <- permtdist(cond1 - matrix(rep(apply(cond1, 2, mean),each=Nt),nrow=Nt), 
+                        cond2 - matrix(rep(apply(cond2, 2, mean),each=Nt),nrow=Nt), Nt, Nf, nboot = nboot)
+perm.t2c <- perm.tvals^2
 ```
 
 ### Compute onsets
@@ -387,10 +432,8 @@ perm.pvals <- vector(mode = "numeric", length = Nf)
 for(F in 1:Nf){
   perm.pvals[F] <- (sum(perm.t2[,F] >= ori.t2[F]) + 1) / (nboot + 1)
 }
-# fdr.pvals <- p.adjust(ori.pvals, method = "fdr")
-fdr.pvals <- p.adjust(perm.pvals, method = "fdr")
-# onset.fdr <- Xf[which(fdr.pvals <= aath)[1]]
-onset.fdr <- find_onset(fdr.pvals <= aath, Xf)
+onset.bh95 <- find_onset(p.adjust(perm.pvals, method = "fdr") <= aath, Xf)
+onset.by01 <- find_onset(p.adjust(perm.pvals, method = "BY") <= aath, Xf)
 
 # MAX -----
 max.th <- quantile(apply(perm.t2, 1, max), probs = 1-aath)
@@ -405,7 +448,7 @@ for(B in 1:nboot){
   perm.cmap <- cluster.make(perm.t2[B,] <= perm.th)  
   perm.max.sums[B] <- max(cluster.sum(values = perm.t2[B,], cmap = perm.cmap))
 }
-# cluster sum threshold
+# cluster-sum threshold
 cs.th <- quantile(perm.max.sums, probs = 1-aath)
 # cluster test
 cs.test <- cluster.test(values = perm.t2, cmap = cmap, cs.th)
@@ -413,7 +456,26 @@ cs.test <- cluster.test(values = perm.t2, cmap = cmap, cs.th)
 onset.cs <- find_onset(cs.test, Xf)
 ```
 
-### Plot permutation distribution + FDR onset
+### Compute cluster-depth onset
+```{r, warning=FALSE}
+df <- as_tibble(rbind(cond1, cond2))
+df2 <- tibble(gp = rep(c("gp1", "gp2"), each = Nt),
+              trial = c(1:Nt, 1:Nt))
+df <- cbind(df2, df)
+
+res <- permuco::clusterlm(formula = df[,3:ncol(df)] ~ gp, 
+                          data = df[,-(3:ncol(df))],
+                          multcomp = "clusterdepth_head",
+                          test = "t",
+                          np = nboot)
+
+cd.pval <- res$multiple_comparison$gpgp2$clusterdepth$main[,2]
+# cd.tval <- res$multiple_comparison$gpgp2$clusterdepth$main[,1]
+onset.cd <- find_onset(cd.pval < aath, Xf)
+```
+
+
+## Plot permutation distribution + FDR BH95 onset
 
 Superimpose original t^2 time course and 95th quantiles of permutation distribution.
 
@@ -431,10 +493,10 @@ df.q <- tibble(x = Xf,
                boot = factor(rep(1, Nf)))
 
 df.sig <- tibble(x = Xf,
-                 y = ifelse(fdr.pvals <= aath, 0, NA),
+                 y = ifelse(p.adjust(perm.pvals, method = "fdr") <= aath, 0, NA),
                  boot = factor(rep(1, Nf)))
 
-p.fdr <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
+p.bh95 <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
   # plot permutation distributions
   geom_line(data = df.perm, aes(x=x, y=y, group = boot),
             colour = "grey",
@@ -444,15 +506,54 @@ p.fdr <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
   geom_vline(xintercept = true_onset) + 
   geom_line(data = df.q, linetype = "dashed") +
   # plot onset
-  geom_vline(xintercept = onset.fdr, linetype = "dotted") +
+  geom_vline(xintercept = onset.bh95, linetype = "dotted") +
   # plot statistical significance
   geom_point(data = df.sig, colour = "black") +
   labs(x = "Time in ms", y = bquote(t^2)) +
-  ggtitle(paste("Permutation + FDR correction =",onset.fdr,"ms"))
-p.fdr
+  ggtitle(paste("Permutation + FDR BH95 correction =",onset.bh95,"ms"))
+p.bh95
 ```
 
-### MAX correction
+## Plot permutation distribution + FDR BY01 onset
+
+Superimpose original t^2 time course and 95th quantiles of permutation distribution.
+
+```{r, warning=FALSE}
+df <- tibble(x = Xf,
+             y = ori.t2,
+             boot = factor(rep(1, Nf)))
+
+df.perm <- tibble(x = rep(Xf, each = nboot),
+                  y = as.vector(perm.t2),
+                  boot = factor(rep(1:nboot, Nf)))
+
+df.q <- tibble(x = Xf, 
+               y = perm.th,
+               boot = factor(rep(1, Nf)))
+
+df.sig <- tibble(x = Xf,
+                 y = ifelse(p.adjust(perm.pvals, method = "BY") <= aath, 0, NA),
+                 boot = factor(rep(1, Nf)))
+
+p.by01 <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
+  # plot permutation distributions
+  geom_line(data = df.perm, aes(x=x, y=y, group = boot),
+            colour = "grey",
+            linewidth = 0.5) +
+  # superimpose original t2 time course
+  geom_line(data = df, linewidth = 1) +
+  geom_vline(xintercept = true_onset) + 
+  geom_line(data = df.q, linetype = "dashed") +
+  # plot onset
+  geom_vline(xintercept = onset.by01, linetype = "dotted") +
+  # plot statistical significance
+  geom_point(data = df.sig, colour = "black") +
+  labs(x = "Time in ms", y = bquote(t^2)) +
+  ggtitle(paste("Permutation + FDR BY01 correction =",onset.by01,"ms"))
+p.by01
+```
+
+## MAX correction
 ```{r, warning=FALSE}
 df <- tibble(x = Xf,
              y = ori.t2,
@@ -488,7 +589,7 @@ p.max <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
 p.max
 ```
 
-### cluster-sum statistics
+## Cluster-sum statistics
 ```{r, warning=FALSE}
 df <- tibble(x = Xf,
              y = ori.t2,
@@ -524,18 +625,59 @@ p.cs <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
 p.cs
 ```
 
-### Combine panels
+## Cluster-depth statistics
+```{r, warning=FALSE}
+perm.th.c <- apply(perm.t2c, 2, quantile, probs = 1-aath)
 
-```{r, warning = FALSE}
-cowplot::plot_grid(p.fdr, p.max, p.cs, p.cp,
-                   nrow = 2,
-                   labels = c("A", "B", "C", "D"),
+df <- tibble(x = Xf,
+             y = ori.t2,
+             boot = factor(rep(1, Nf)))
+
+df.perm <- tibble(x = rep(Xf, each = nboot),
+                  y = as.vector(perm.t2c),
+                  boot = factor(rep(1:nboot, Nf)))
+
+df.q <- tibble(x = Xf, 
+               y = perm.th.c,
+               boot = factor(rep(1, Nf)))
+
+df.sig <- tibble(x = Xf,
+                 y = ifelse(cd.pval < aath, 0, NA),
+                 boot = factor(rep(1, Nf)))
+
+p.cd <- ggplot(data = df.perm, aes(x=x, y=y, group = boot)) + theme_gar +
+  # plot permutation distributions
+  geom_line(data = df.perm, aes(x=x, y=y, group = boot),
+            colour = "grey",
+            linewidth = 0.5) +
+  # superimpose original t2 time course
+  geom_line(data = df, linewidth = 1) +
+  geom_vline(xintercept = true_onset) + 
+  geom_line(data = df.q, linetype = "dashed") +
+  # plot onset
+  geom_vline(xintercept = onset.cd, linetype = "dotted") +
+  # plot statistical significance
+  geom_point(data = df.sig, colour = "black") +
+  labs(x = "Time in ms", y = bquote(t^2)) +
+  ggtitle(paste("Permutation + cluster-depth correction =",onset.cd,"ms"))
+p.cd
+```
+
+## Combine panels
+
+```{r, eval=FALSE, warning=FALSE}
+cowplot::plot_grid(p.bh95, p.by01, p.cs, p.cd, p.max, p.cp,
+                   nrow = 3,
+                   labels = c("A", "B", "C", "D", "E", "F"),
                    label_size = 20)
 
-ggsave(filename = "./figures/figure2.pdf", width = 15, height = 10)
+ggsave(filename = "./figures/examples_2.pdf", width = 15, height = 12)
 ```
 
 # References
+Frossard, J., & Renaud, O. (2021). Permutation Tests for Regression, ANOVA, and Comparison of Signals: The permuco Package. Journal of Statistical Software, 99, 1–32. https://doi.org/10.18637/jss.v099.i15
+
+Frossard, J., & Renaud, O. (2022). The cluster depth tests: Toward point-wise strong control of the family-wise error rate in massively univariate tests with application to M/EEG. NeuroImage, 247, 118824. https://doi.org/10.1016/j.neuroimage.2021.118824
 
 Stevens, M.H.H. (2009) A Primer of Ecology with R, 2nd Printing. Springer, New York.
 

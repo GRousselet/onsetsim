@@ -2,7 +2,7 @@ Estimating onsets using cluster statistics: simulation using EEG-like
 noise
 ================
 Guillaume A. Rousselet
-2024-09-12
+2024-09-23
 
 # Dependencies
 

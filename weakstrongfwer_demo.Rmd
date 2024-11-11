@@ -36,6 +36,7 @@ library(tibble)
 library(ggplot2)
 library(cowplot)
 library(beepr)
+library(permuco)
 source("./code/theme_gar.txt")
 source("./code/functions.R")
 # Colour palette from http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/

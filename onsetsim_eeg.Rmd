@@ -33,6 +33,7 @@ meanpower <- unlist(read.table("./code/meanpower.txt"))
 # Colour palette from http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
 categ.palette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#0072B2", "#D55E00", "#F0E442")
 library(permuco) # to compute cluster depth statistics
+library(cowplot)
 ```
 
 Cluster-depth algorithm ([Frossard & Renaud, 2022](https://www.sciencedirect.com/science/article/pii/S1053811921010958)) from the [`permuco` package](https://jaromilfrossard.github.io/permuco/).
@@ -156,7 +157,7 @@ df <- tibble(onsets = c(simres.cp, simres.cs, simres.bh95, simres.max, simres.cd
 
 # df$method <- keeporder(df$method) 
 
-ggplot(data = df, aes(x = onsets, colour = method)) + theme_gar +
+pA <- ggplot(data = df, aes(x = onsets, colour = method)) + theme_gar +
   # stat_density(geom = "line") +
   geom_freqpoly(na.rm = TRUE, breaks = Xf, linewidth = 1) +
   geom_vline(xintercept = true_onset, linetype = "solid") +
@@ -167,11 +168,11 @@ ggplot(data = df, aes(x = onsets, colour = method)) + theme_gar +
   coord_cartesian(xlim = c(0, 270)) +
   scale_x_continuous(breaks = seq(0, 300, 50)) + 
   guides(colour = guide_legend(override.aes = list(linewidth = 5)))
-
-ggsave(filename = "./figures/onsetsim_eeg_1.pdf", width = 10, height = 5)
+pA
+# ggsave(filename = "./figures/onsetsim_eeg_1.pdf", width = 10, height = 5)
 ```
 
-Summary statistics reported in reported in Table 1.
+Summary statistics reported in Table 1.
 
 ## Mode
 ```{r}
@@ -186,37 +187,58 @@ print(paste("MAX =",find_mode(simres.max)))
 
 ## Bias
 ```{r}
+bias.bh95 <- median(simres.bh95, na.rm = TRUE) - true_onset
+bias.by01 <- median(simres.by01, na.rm = TRUE) - true_onset
+bias.max <- median(simres.max, na.rm = TRUE) - true_onset
+bias.cs <- median(simres.cs, na.rm = TRUE) - true_onset
+bias.cp <- median(simres.cp, na.rm = TRUE) - true_onset
+bias.cd <- median(simres.cd, na.rm = TRUE) - true_onset
+
 print("Bias:")
-print(paste("Change point =",median(simres.cp, na.rm = TRUE) - true_onset))
-print(paste("Cluster-depth =",median(simres.cd, na.rm = TRUE) - true_onset))
-print(paste("Cluster-sum =",median(simres.cs, na.rm = TRUE) - true_onset))
-print(paste("FDR BH95 =",median(simres.bh95, na.rm = TRUE) - true_onset))
-print(paste("FDR BY01 =",median(simres.by01, na.rm = TRUE) - true_onset))
-print(paste("MAX =",median(simres.max, na.rm = TRUE) - true_onset))
+print(paste("Change point =",bias.cp))
+print(paste("Cluster-depth =",bias.cd))
+print(paste("Cluster-sum =",bias.cs))
+print(paste("FDR BH95 =",bias.bh95))
+print(paste("FDR BY01 =",bias.by01))
+print(paste("MAX =",bias.max))
 ```
 
 ## Mean absolute error 
 
 ```{r}
+mae.bh95 <- round(mean(abs(simres.bh95 - true_onset), na.rm = TRUE), digits=1)
+mae.by01 <- round(mean(abs(simres.by01 - true_onset), na.rm = TRUE), digits=1)
+mae.max <- round(mean(abs(simres.max - true_onset), na.rm = TRUE), digits=1)
+mae.cs <- round(mean(abs(simres.cs - true_onset), na.rm = TRUE), digits=1)
+mae.cp <- round(mean(abs(simres.cp - true_onset), na.rm = TRUE), digits=1)
+mae.cd <- round(mean(abs(simres.cd - true_onset), na.rm = TRUE), digits=1)
+
 print("MAE:")
-print(paste("Change point =",round(mean(abs(simres.cp - true_onset), na.rm = TRUE), digits=1)))
-print(paste("Cluster-depth =",round(mean(abs(simres.cd - true_onset), na.rm = TRUE), digits=1)))
-print(paste("Cluster-sum =",round(mean(abs(simres.cs - true_onset), na.rm = TRUE), digits=1)))
-print(paste("FDR BH95 =",round(mean(abs(simres.bh95 - true_onset), na.rm = TRUE), digits=1)))
-print(paste("FDR BY01 =",round(mean(abs(simres.by01 - true_onset), na.rm = TRUE), digits=1)))
-print(paste("MAX =",round(mean(abs(simres.max - true_onset), na.rm = TRUE), digits=1)))
+print(paste("Change point =",mae.cp))
+print(paste("Cluster-depth =",mae.cd))
+print(paste("Cluster-sum =",mae.cs))
+print(paste("FDR BH95 =",mae.bh95))
+print(paste("FDR BY01 =",mae.by01))
+print(paste("MAX =",mae.max))
 ```
 
 ## Variance
 
 ```{r}
+var.bh95 <- round(var(simres.bh95, na.rm = TRUE), digits=0)
+var.by01 <- round(var(simres.by01, na.rm = TRUE), digits=0)
+var.max <- round(var(simres.max), digits=0)
+var.cs <- round(var(simres.cs, na.rm = TRUE), digits=0)
+var.cp <- round(var(simres.cp), digits=0)
+var.cd <- round(var(simres.cd), digits=0)
+
 print("Variance:")
-print(paste("Change point =",round(var(simres.cp, na.rm = TRUE), digits=0)))
-print(paste("Cluster-depth =",round(var(simres.cd, na.rm = TRUE), digits=0)))
-print(paste("Cluster-sum =",round(var(simres.cs, na.rm = TRUE), digits=0)))
-print(paste("FDR BH95 =",round(var(simres.bh95, na.rm = TRUE), digits=0)))
-print(paste("FDR BY01 =",round(var(simres.by01, na.rm = TRUE), digits=0)))
-print(paste("MAX =",round(var(simres.max, na.rm = TRUE), digits=0)))
+print(paste("Change point =",var.cp))
+print(paste("Cluster-depth =",var.cd))
+print(paste("Cluster-sum =",var.cs))
+print(paste("FDR BH95 =",var.bh95))
+print(paste("FDR BY01 =",var.by01))
+print(paste("MAX =",var.max))
 ```
 
 ## Proportion too early
@@ -239,6 +261,181 @@ print(paste("Cluster-sum =",round(100*mean((simres.cs - true_onset) <= -40, na.r
 print(paste("FDR BH95 =",round(100*mean((simres.bh95 - true_onset) <= -40, na.rm = TRUE), digits=1),"%"))
 print(paste("FDR BY01 =",round(100*mean((simres.by01 - true_onset) <= -40, na.rm = TRUE), digits=1),"%"))
 print(paste("MAX =",round(100*mean((simres.max - true_onset) <= -40, na.rm = TRUE), digits=1),"%"))
+```
+
+## Bootstrap estimates of the standard errors
+
+Not enough variability for bias and MAE to be worth showing in the summary figure.
+
+```{r, eval=FALSE}
+nboot <- 2000
+ci.cov <- 0.97
+aath <- 1-ci.cov
+nsim <- length(simres.bh95)
+id <- 1:nsim
+boot.bias.bh95 <- vector(mode = "numeric", length = nboot)
+boot.bias.by01 <- vector(mode = "numeric", length = nboot)
+boot.bias.max <- vector(mode = "numeric", length = nboot)
+boot.bias.cs <- vector(mode = "numeric", length = nboot)
+boot.bias.cp <- vector(mode = "numeric", length = nboot)
+boot.bias.cd <- vector(mode = "numeric", length = nboot)
+boot.mae.bh95 <- vector(mode = "numeric", length = nboot)
+boot.mae.by01 <- vector(mode = "numeric", length = nboot)
+boot.mae.max <- vector(mode = "numeric", length = nboot)
+boot.mae.cs <- vector(mode = "numeric", length = nboot)
+boot.mae.cp <- vector(mode = "numeric", length = nboot)
+boot.mae.cd <- vector(mode = "numeric", length = nboot)
+boot.var.bh95 <- vector(mode = "numeric", length = nboot)
+boot.var.by01 <- vector(mode = "numeric", length = nboot)
+boot.var.max <- vector(mode = "numeric", length = nboot)
+boot.var.cs <- vector(mode = "numeric", length = nboot)
+boot.var.cp <- vector(mode = "numeric", length = nboot)
+boot.var.cd <- vector(mode = "numeric", length = nboot)
+
+for(B in 1:nboot){
+  bootsamp <- sample(id, size = nsim, replace = TRUE)
+  # Bias
+  boot.bias.bh95[B] <- median(simres.bh95[bootsamp], na.rm = TRUE) - true_onset
+  boot.bias.by01[B] <- median(simres.by01[bootsamp], na.rm = TRUE) - true_onset
+  boot.bias.max[B] <- median(simres.max[bootsamp], na.rm = TRUE) - true_onset
+  boot.bias.cs[B] <- median(simres.cs[bootsamp], na.rm = TRUE) - true_onset
+  boot.bias.cp[B] <- median(simres.cp[bootsamp], na.rm = TRUE) - true_onset
+  boot.bias.cd[B] <- median(simres.cd[bootsamp], na.rm = TRUE) - true_onset
+  # MAE
+  boot.mae.bh95[B] <- mean(abs(simres.bh95[bootsamp] - true_onset), na.rm = TRUE)
+  boot.mae.by01[B] <- mean(abs(simres.by01[bootsamp] - true_onset), na.rm = TRUE)
+  boot.mae.max[B] <- mean(abs(simres.max[bootsamp] - true_onset), na.rm = TRUE)
+  boot.mae.cs[B] <- mean(abs(simres.cs[bootsamp] - true_onset), na.rm = TRUE)
+  boot.mae.cp[B] <- mean(abs(simres.cp[bootsamp] - true_onset), na.rm = TRUE)
+  boot.mae.cd[B] <- mean(abs(simres.cd[bootsamp] - true_onset), na.rm = TRUE)
+  # Variance
+  boot.var.bh95[B] <- var(simres.bh95[bootsamp], na.rm = TRUE)
+  boot.var.by01[B] <- var(simres.by01[bootsamp], na.rm = TRUE)
+  boot.var.max[B] <- var(simres.max[bootsamp], na.rm = TRUE)
+  boot.var.cs[B] <- var(simres.cs[bootsamp], na.rm = TRUE)
+  boot.var.cp[B] <- var(simres.cp[bootsamp], na.rm = TRUE)
+  boot.var.cd[B] <- var(simres.cd[bootsamp], na.rm = TRUE)
+}
+# Compatibility intervals ---
+# Bias
+ci.bias.bh95 <- quantile(boot.bias.bh95, probs = c(aath/2, 1-aath/2), type = 6)
+ci.bias.by01 <- quantile(boot.bias.by01, probs = c(aath/2, 1-aath/2), type = 6)
+ci.bias.max <- quantile(boot.bias.max, probs = c(aath/2, 1-aath/2), type = 6)
+ci.bias.cs <- quantile(boot.bias.cs, probs = c(aath/2, 1-aath/2), type = 6)
+ci.bias.cp <- quantile(boot.bias.cp, probs = c(aath/2, 1-aath/2), type = 6)
+ci.bias.cd <- quantile(boot.bias.cd, probs = c(aath/2, 1-aath/2), type = 6)
+# MAE
+ci.mae.bh95 <- quantile(boot.mae.bh95, probs = c(aath/2, 1-aath/2), type = 6)
+ci.mae.by01 <- quantile(boot.mae.by01, probs = c(aath/2, 1-aath/2), type = 6)
+ci.mae.max <- quantile(boot.mae.max, probs = c(aath/2, 1-aath/2), type = 6)
+ci.mae.cs <- quantile(boot.mae.cs, probs = c(aath/2, 1-aath/2), type = 6)
+ci.mae.cp <- quantile(boot.mae.cp, probs = c(aath/2, 1-aath/2), type = 6)
+ci.mae.cd <- quantile(boot.mae.cd, probs = c(aath/2, 1-aath/2), type = 6)
+# Variance
+ci.var.bh95 <- quantile(boot.var.bh95, probs = c(aath/2, 1-aath/2), type = 6)
+ci.var.by01 <- quantile(boot.var.by01, probs = c(aath/2, 1-aath/2), type = 6)
+ci.var.max <- quantile(boot.var.max, probs = c(aath/2, 1-aath/2), type = 6)
+ci.var.cs <- quantile(boot.var.cs, probs = c(aath/2, 1-aath/2), type = 6)
+ci.var.cp <- quantile(boot.var.cp, probs = c(aath/2, 1-aath/2), type = 6)
+ci.var.cd <- quantile(boot.var.cd, probs = c(aath/2, 1-aath/2), type = 6)
+
+# Standard errors ---
+# Bias
+se.bias.bh95 <- sd(boot.bias.bh95)
+se.bias.by01 <- sd(boot.bias.by01)
+se.bias.max <- sd(boot.bias.max)
+se.bias.cs <- sd(boot.bias.cs)
+se.bias.cp <- sd(boot.bias.cp)
+se.bias.cd <- sd(boot.bias.cd)
+# MAE
+se.mae.bh95 <- sd(boot.mae.bh95)
+se.mae.by01 <- sd(boot.mae.by01)
+se.mae.max <- sd(boot.mae.max)
+se.mae.cs <- sd(boot.mae.cs)
+se.mae.cp <- sd(boot.mae.cp)
+se.mae.cd <- sd(boot.mae.cd)
+# Variance
+se.var.bh95 <- sd(boot.var.bh95)
+se.var.by01 <- sd(boot.var.by01)
+se.var.max <- sd(boot.var.max)
+se.var.cs <- sd(boot.var.cs)
+se.var.cp <- sd(boot.var.cp)
+se.var.cd <- sd(boot.var.cd)
+```
+
+## Summary figure: MAE / bias
+```{r, warning=FALSE, message=FALSE}
+
+df <- tibble(MAE = c(mae.cp, mae.cd, mae.cs, mae.bh95, mae.by01, mae.max),
+             bias = c(bias.cp, bias.cd, bias.cs, bias.bh95, bias.by01, bias.max),
+             method = factor(c("change point", "cluster-depth", "cluster-sum", 
+                               "FDR BH95", "FDR BY01", "MAX")),
+             method2 = factor(c("change point", "cluster-depth", "cluster-sum", 
+                               "BH95", "BY01", "MAX"))
+             )
+
+# df$method <- keeporder(df$method) 
+
+pB <- ggplot(data = df, aes(x = bias, y = MAE, colour = method, label = method2)) + theme_gar +
+  # stat_density(geom = "line") +
+  geom_point(size = 4) +
+  # geom_vline(xintercept = true_onset, linetype = "solid") +
+  scale_colour_manual(values = categ.palette,
+                      name = "Method") + 
+  scale_fill_manual(values = categ.palette,
+                      name = "Method") + 
+  geom_label(aes(fill = method), colour = "white", fontface = "bold",
+             nudge_y = c(-3, -3, -3, -3, +3, +3), size = 5,
+             show.legend = FALSE) + 
+  theme(legend.position = "right") +
+  labs(x = "Bias (ms)", y = "Mean absolute error (ms)") +
+  coord_cartesian(xlim = c(10, 50), ylim = c(10, 50)) +
+  # scale_x_continuous(breaks = seq(0,300,50)) +
+  guides(colour = guide_legend(override.aes = list(linewidth = 5)))
+  # scale_colour_discrete(name = "method (bias / MAE in ms)")
+pB
+```
+
+## Summary figure: variance / bias 
+```{r}
+df <- tibble(variance = c(var.cp, var.cd, var.cs, var.bh95, var.by01, var.max),
+             bias = c(bias.cp, bias.cd, bias.cs, bias.bh95, bias.by01, bias.max),
+             method = factor(c("change point", "cluster-depth", "cluster-sum", 
+                               "FDR BH95", "FDR BY01", "MAX")),
+             method2 = factor(c("change point", "cluster-depth", "cluster-sum", 
+                               "BH95", "BY01", "MAX"))
+             )
+
+# df$method <- keeporder(df$method) 
+
+ggplot(data = df, aes(x = bias, y = variance, colour = method, label = method2)) + theme_gar +
+  # stat_density(geom = "line") +
+  geom_point(size = 4) +
+  # geom_vline(xintercept = true_onset, linetype = "solid") +
+  scale_colour_manual(values = categ.palette,
+                      name = "Method") + 
+  scale_fill_manual(values = categ.palette,
+                      name = "Method") + 
+  geom_label(aes(fill = method), colour = "white", fontface = "bold",
+             nudge_x = c(0, -8.5, +8, 0, 0, 0),
+             nudge_y = c(-250, 0, 0, -250, +250, +250), 
+             size = 5, show.legend = FALSE) +
+  theme(legend.position = "right") +
+  labs(x = "Bias (ms)", y = "Variance") +
+  coord_cartesian(xlim = c(10, 50), ylim = c(0, 4000)) +
+  # scale_x_continuous(breaks = seq(0,300,50)) +
+  guides(colour = guide_legend(override.aes = list(linewidth = 5)))
+  # scale_colour_discrete(name = "method (bias / MAE in ms)")
+```
+
+## Combine panels
+```{r, eval=FALSE}
+cowplot::plot_grid(pA, pB + theme(legend.position = "none"),
+                   labels = c("A", "B"),
+                    rel_widths = c(1, 0.7),
+                   label_size = 20)
+
+ggsave(filename = "./figures/onsetsim_eeg_1.pdf", width = 12, height = 5)
 ```
 
 # Simulation: vary sample size
